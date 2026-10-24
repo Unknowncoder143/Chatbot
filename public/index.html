@@ -1,327 +1,108 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebVibe AI Chatbot</title>
-  <meta name="description" content="Chat with WebVibe AI, your AI website assistant.">
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #0b0f17;
-      color: #ffffff;
-    }
-
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 24px;
-    }
-
-    .hero h1 {
-      font-size: clamp(36px, 7vw, 64px);
-      margin-bottom: 12px;
-    }
-
-    .hero h1 span {
-      color: #4f8cff;
-    }
-
-    .hero p {
-      color: #aab5c5;
-      max-width: 540px;
-      line-height: 1.7;
-    }
-
-    #wv-launcher {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 99999;
-      background: #4f8cff;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 14px 20px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: bold;
-      box-shadow: 0 5px 20px #0005;
-    }
-
-    #wv-panel {
-      display: none;
-      position: fixed;
-      bottom: 82px;
-      right: 20px;
-      z-index: 99999;
-      width: 350px;
-      height: 440px;
-      max-width: calc(100vw - 24px);
-      max-height: calc(100dvh - 110px);
-      background: #141b26;
-      color: white;
-      border: 1px solid #293548;
-      border-radius: 16px;
-      box-shadow: 0 8px 35px #0008;
-      overflow: hidden;
-    }
-
-    .wv-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px;
-      background: #1b2636;
-    }
-
-    .wv-header h2 {
-      font-size: 17px;
-      margin: 0;
-    }
-
-    #wv-close {
-      border: none;
-      background: transparent;
-      color: white;
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    #wv-messages {
-      height: calc(100% - 130px);
-      padding: 12px;
-      overflow-y: auto;
-      overflow-wrap: anywhere;
-    }
-
-    .wv-message {
-      margin: 10px 0;
-      padding: 10px 12px;
-      border-radius: 10px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-
-    .wv-user {
-      background: #263d60;
-      margin-left: 25px;
-    }
-
-    .wv-ai {
-      background: #202b3b;
-      margin-right: 15px;
-    }
-
-    .wv-error {
-      color: #ffb4b4;
-    }
-
-    #wv-form {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      gap: 8px;
-      padding: 12px;
-      background: #141b26;
-      border-top: 1px solid #293548;
-    }
-
-    #wv-input {
-      flex: 1;
-      min-width: 0;
-      padding: 11px;
-      border: 1px solid #35445a;
-      border-radius: 8px;
-      background: #0b0f17;
-      color: white;
-      outline: none;
-    }
-
-    #wv-input:focus {
-      border-color: #4f8cff;
-    }
-
-    #wv-send {
-      background: #4f8cff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 13px;
-      cursor: pointer;
-    }
-
-    #wv-send:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WebVibe AI Chat</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b0f17;color:#edf2ff;font:15px Arial,sans-serif;height:100dvh;display:flex;flex-direction:column}
+header{padding:17px 20px;background:#141b26;border-bottom:1px solid #29354a;display:flex;align-items:center;gap:12px}
+.logo{background:linear-gradient(135deg,#4f8cff,#8957ff);padding:12px;border-radius:13px}
+header h3{margin:0;font-size:17px}
+header small{display:block;color:#9aa9c0;margin-top:5px}
+#messages{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:85%;padding:13px 16px;border-radius:17px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot{align-self:flex-start;background:#182131;border:1px solid #29354a}
+.user{align-self:flex-end;background:#356fe0;color:white}
+form{padding:15px;display:flex;gap:10px;background:#141b26;border-top:1px solid #29354a}
+textarea{flex:1;resize:none;max-height:120px;background:#0b0f17;border:1px solid #34445e;border-radius:15px;padding:14px;color:white;font:inherit;outline:none}
+textarea:focus{border-color:#4f8cff}
+button{border:0;border-radius:13px;background:#4f8cff;color:white;padding:0 20px;font-size:20px;cursor:pointer}
+button:disabled{opacity:.5}
+footer{text-align:center;color:#738198;font-size:11px;padding:0 10px 10px;background:#141b26}
+</style>
 </head>
-
 <body>
-  <main class="hero">
-    <h1>Welcome to <span>WebVibe AI</span></h1>
-    <p>
-      Your AI website assistant. Click the chat button in the
-      bottom-right corner to start a conversation.
-    </p>
-  </main>
+<header>
+  <div class="logo">✦</div>
+  <div><h3>WebVibe AI</h3><small id="status">Your AI assistant</small></div>
+</header>
 
-  <button
-    id="wv-launcher"
-    type="button"
-    aria-controls="wv-panel"
-    aria-expanded="false">
-    💬 Chat with AI
-  </button>
+<main id="messages">
+  <div class="msg bot">Hey there! 👋 Welcome to WebVibe AI. What can I help you with today?</div>
+</main>
 
-  <section id="wv-panel" aria-label="WebVibe AI chatbot">
-    <header class="wv-header">
-      <h2>WebVibe AI</h2>
-      <button id="wv-close" type="button" aria-label="Close chat">
-        ×
-      </button>
-    </header>
+<form id="form">
+  <textarea id="input" rows="1" maxlength="4000" placeholder="Message WebVibe AI..." required></textarea>
+  <button id="send" type="submit" aria-label="Send message">➤</button>
+</form>
+<footer>Powered by WebVibe AI</footer>
 
-    <div id="wv-messages" aria-live="polite">
-      <div class="wv-message wv-ai">
-        Hi! 👋 I'm WebVibe AI. How can I help you today?
-      </div>
-    </div>
+<script>
+const API="https://llmaichatbot.netlify.app/.netlify/functions/chat";
+const WIDGET_ID="demo123";
+const messages=document.getElementById("messages");
+const input=document.getElementById("input");
+const send=document.getElementById("send");
+const status=document.getElementById("status");
 
-    <form id="wv-form">
-      <input
-        id="wv-input"
-        type="text"
-        placeholder="Ask something..."
-        aria-label="Your message"
-        maxlength="4000"
-        autocomplete="off"
-        required>
+function add(text,who){
+  const el=document.createElement("div");
+  el.className="msg "+who;
+  el.textContent=text;
+  messages.appendChild(el);
+  messages.scrollTop=messages.scrollHeight;
+  return el;
+}
 
-      <button id="wv-send" type="submit">Send</button>
-    </form>
-  </section>
+document.getElementById("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const question=input.value.trim();
+  if(!question||send.disabled)return;
+  add(question,"user");
+  input.value="";
+  send.disabled=true;
+  status.textContent="Thinking...";
+  const waiting=add("Thinking…","bot");
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),30000);
 
-  <script>
-    // Replace with your deployed Netlify site URL.
-    const API_URL =
-      "https://llmaichatbot.netlify.app/.netlify/functions/chat";
-
-    // This must match an ID allowed by your backend.
-    const WIDGET_ID = "demo123";
-
-    const launcher = document.getElementById("wv-launcher");
-    const panel = document.getElementById("wv-panel");
-    const closeButton = document.getElementById("wv-close");
-    const form = document.getElementById("wv-form");
-    const input = document.getElementById("wv-input");
-    const sendButton = document.getElementById("wv-send");
-    const messages = document.getElementById("wv-messages");
-
-    launcher.addEventListener("click", () => {
-      const isOpen = panel.style.display !== "block";
-      panel.style.display = isOpen ? "block" : "none";
-      launcher.setAttribute("aria-expanded", String(isOpen));
-
-      if (isOpen) input.focus();
+  try{
+    const res=await fetch(API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({widgetId:WIDGET_ID,question}),
+      signal:controller.signal
     });
+    const data=await res.json();
+    waiting.remove();
+    if(!res.ok)throw Error(data.error||"Request failed: "+res.status);
+    if(typeof data.reply!=="string")throw Error("Invalid AI response.");
+    add(data.reply,"bot");
+    status.textContent="Ready to help";
+  }catch(err){
+    waiting.remove();
+    add(err.name==="AbortError"?"Request timed out. Please try again.":err.message||"Connection failed. Check your backend and CORS settings.","bot");
+    status.textContent="Connection issue";
+  }finally{
+    clearTimeout(timer);
+    send.disabled=false;
+    input.focus();
+  }
+});
 
-    closeButton.addEventListener("click", () => {
-      panel.style.display = "none";
-      launcher.setAttribute("aria-expanded", "false");
-    });
-
-    function addMessage(sender, text, isError = false) {
-      const message = document.createElement("div");
-      message.className =
-        "wv-message " +
-        (sender === "You" ? "wv-user" : "wv-ai");
-
-      if (isError) message.classList.add("wv-error");
-
-      const label = document.createElement("strong");
-      label.textContent = sender + ": ";
-
-      // Use textContent, not innerHTML, for AI/user messages.
-      message.appendChild(label);
-      message.appendChild(document.createTextNode(text));
-
-      messages.appendChild(message);
-      messages.scrollTop = messages.scrollHeight;
-
-      return message;
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const question = input.value.trim();
-      if (!question || sendButton.disabled) return;
-
-      addMessage("You", question);
-      input.value = "";
-      sendButton.disabled = true;
-      sendButton.textContent = "...";
-
-      const thinking = addMessage("AI", "Thinking...");
-
-      try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            widgetId: WIDGET_ID,
-            question: question
-          })
-        });
-
-        const data = await response.json();
-        thinking.remove();
-
-        if (!response.ok) {
-          addMessage(
-            "AI",
-            data.error || "The chatbot request failed.",
-            true
-          );
-        } else {
-          addMessage(
-            "AI",
-            typeof data.reply === "string"
-              ? data.reply
-              : "No response received."
-          );
-        }
-      } catch (error) {
-        thinking.remove();
-
-        addMessage(
-          "AI",
-          "Unable to connect. Check your Netlify deployment and try again.",
-          true
-        );
-      } finally {
-        sendButton.disabled = false;
-        sendButton.textContent = "Send";
-        input.focus();
-      }
-    });
-  </script>
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    document.getElementById("form").requestSubmit();
+  }
+});
+input.addEventListener("input",()=>{
+  input.style.height="auto";
+  input.style.height=Math.min(input.scrollHeight,120)+"px";
+});
+</script>
 </body>
 </html>
