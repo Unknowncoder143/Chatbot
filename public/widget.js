@@ -8,7 +8,7 @@
 
   // IMPORTANT: Replace with your actual Netlify site URL.
   const API_URL =
-    "https://YOUR-SITE.netlify.app/.netlify/functions/chat";
+    "https://llmaichatbot.netlify.app/.netlify/functions/chat";
 
   const button = document.createElement("button");
   button.textContent = "💬 Chat with AI";
