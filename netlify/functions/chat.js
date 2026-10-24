@@ -1,15 +1,36 @@
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Cache-Control": "no-store"
+};
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json"
+    }
+  });
+}
 
 export default async (request) => {
+  // Browser CORS preflight
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
+  }
+
   if (request.method !== "POST") {
-    return Response.json(
-      { error: "Use POST to send a chat message." },
-      { status: 405 }
-    );
+    return json({ error: "Use POST to send a chat message." }, 405);
   }
 
   try {
     const body = await request.json();
-    const { widgetId, question } = body;
+    const { widgetId, question } = body || {};
 
     if (
       typeof widgetId !== "string" ||
@@ -17,33 +38,23 @@ export default async (request) => {
       !question.trim() ||
       question.length > 4000
     ) {
-      return Response.json(
-        { error: "Invalid widget ID or question." },
-        { status: 400 }
-      );
+      return json({ error: "Invalid widget ID or question." }, 400);
     }
 
     const allowedIds = (process.env.ALLOWED_WIDGET_IDS || "")
       .split(",")
-      .map((id) => id.trim())
+      .map(id => id.trim())
       .filter(Boolean);
 
     if (!allowedIds.includes(widgetId)) {
-      return Response.json(
-        { error: "Unknown widget. Check ALLOWED_WIDGET_IDS." },
-        { status: 403 }
-      );
+      return json({ error: "Unknown widget. Check ALLOWED_WIDGET_IDS." }, 403);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
 
     if (!apiKey) {
       console.error("OPENROUTER_API_KEY is missing");
-
-      return Response.json(
-        { error: "Server configuration error: API key is missing." },
-        { status: 500 }
-      );
+      return json({ error: "Server API key is not configured." }, 500);
     }
 
     const upstream = await fetch(
@@ -73,22 +84,21 @@ export default async (request) => {
     );
 
     if (!upstream.ok) {
-      // Log provider status, but never log the secret API key.
       console.error("OpenRouter HTTP status:", upstream.status);
 
-      return Response.json(
-        {
-          error:
-            upstream.status === 401
-              ? "OpenRouter authentication failed. Check your API key."
-              : upstream.status === 402
-              ? "OpenRouter reports insufficient credits."
-              : upstream.status === 429
-              ? "Too many requests. Please try again later."
-              : "OpenRouter request failed. Check the function logs."
-        },
-        { status: 502 }
-      );
+      if (upstream.status === 401) {
+        return json({ error: "OpenRouter API key is invalid." }, 502);
+      }
+
+      if (upstream.status === 402) {
+        return json({ error: "OpenRouter account has insufficient credits." }, 502);
+      }
+
+      if (upstream.status === 429) {
+        return json({ error: "Rate limit reached. Please try again later." }, 502);
+      }
+
+      return json({ error: "OpenRouter request failed. Check Netlify function logs." }, 502);
     }
 
     const result = await upstream.json();
@@ -96,24 +106,14 @@ export default async (request) => {
 
     if (typeof reply !== "string") {
       console.error("OpenRouter returned no text response");
-
-      return Response.json(
-        { error: "The AI did not return a text response." },
-        { status: 502 }
-      );
+      return json({ error: "The AI returned no text response." }, 502);
     }
 
-    return Response.json(
-      { reply },
-      { headers: { "Cache-Control": "no-store" } }
-    );
-  } catch (error) {
-    console.error("Chat function error:", error.message);
+    return json({ reply });
 
-    return Response.json(
-      { error: "Request failed. Check the Netlify function logs." },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("Chat function error:", error);
+    return json({ error: "Chat request failed. Check the function logs." }, 500);
   }
 };
 
